@@ -39,3 +39,20 @@ This is how the app looks:
 ## Why are the members' voices different?
 
 Some physical characteristics of the vocal cords like length, thickness, and tension have impact on the frequency result of them speaking, causing this difference. The medium in which the voice is propagated also can affect the result.
+
+## References
+
+- Python Software Foundation. (2021). [Tkinter 8.6 documentation](https://docs.python.org/3/library/tkinter.html)
+
+- Python Software Foundation. (2020). [The Python Language Reference](https://docs.python.org/3/reference/index.html)
+- Python Basics. (n.d.). [Tkinter tutorial](https://pythonbasics.org/tkinter/)
+
+- SciPy developers. (2021). [SciPy Reference Guide](https://docs.scipy.org/doc/scipy/reference/index.html)
+
+- sounddevice developers. (2023). [Play a Sound File - sounddevice Documentation](https://python-sounddevice.readthedocs.io/en/0.4.6/examples.html#play-a-sound-file)
+
+- sounddevice developers. (2021). [sounddevice documentation](https://python-sounddevice.readthedocs.io/en/0.4.1/)
+
+- Tanenbaum, A. (2003). [Computer Networks. 4th edition](https://www.pearson.com/us/higher-education/product/Tanenbaum-Computer-Networks-4th-Edition/9780130661029.html)
+
+- Virtanen, P., Gommers, R., Oliphant, T. E., et al. (2020). [SciPy 1.0: fundamental algorithms for scientific computing in Python](https://www.nature.com/articles/s41592-019-0686-2). Nature Methods, 17(3), 261-272
