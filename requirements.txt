@@ -1,6 +1,5 @@
-pyaudio
-scipy
-tkinter
-sounddevice
 matplotlib
 numpy
+scipy
+sounddevice
+tkinter

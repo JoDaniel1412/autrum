@@ -5,6 +5,7 @@ freq_graph_title = "Frequency Domain"
 record_btn_label = "Record"
 play_btn_label = "Play"
 open_btn_label = "Open"
+file_select_label = "Selected a file"
 file_selected_label = "File selected: "
 file_not_selected_label = "No file selected"
 
