@@ -1,21 +1,29 @@
-import tkinter as tk
-from tkinter import ttk
-from PIL import Image, ImageTk
-import sounddevice as sd
-from scipy.io.wavfile import write
-from scipy.fft import fft, fftfreq, fftshift
+import os
+import pyaudio
+
+import resources.strings as st
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import numpy as np
+import sounddevice as sd
+import tkinter as tk
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from PIL import Image, ImageTk
+from scipy.fft import fft, fftfreq, fftshift
+from scipy.io.wavfile import read, write
+from tkinter import filedialog, ttk
+
 
 # Variables initialization
-sampler = 44100
 blocksize=1024
+sampler = 44100
 audio_buffer = []
+out_dir = "out/"
+temp_dir = "temp/"
 
 # Set up Tkinter UI
 root = tk.Tk()
-root.title("Autrum")
+root.title(st.app_title)
 root.geometry("1200x600")
 root.minsize(1200, 600)
 
@@ -34,7 +42,7 @@ toolbar_frame = ttk.Frame(root)
 toolbar_frame.pack(fill=tk.X, expand=True)
 
 # Time Graph
-time_label = ttk.Label(header_frame, text="Time Domain", font=('Arial', 18))
+time_label = ttk.Label(header_frame, text=st.time_graph_title, font=('Arial', 18))
 time_label.pack(side=tk.LEFT, padx=20)
 
 fig_time = plt.Figure(figsize=(5, 4), dpi=100)
@@ -49,7 +57,7 @@ toolbar.pack(side=tk.LEFT, padx=20)
 toolbar.update()
 
 # Freq Graph
-freq_label = ttk.Label(header_frame, text="Frequency Domain", font=('Arial', 18))
+freq_label = ttk.Label(header_frame, text=st.freq_graph_title, font=('Arial', 18))
 freq_label.pack(side=tk.RIGHT, padx=20)
 
 fig_freq = plt.Figure(figsize=(5, 4), dpi=100)
@@ -68,31 +76,45 @@ record_frame = ttk.Frame(root)
 record_frame.pack(side=tk.BOTTOM, padx=10, pady=20)
 
 # Load icon images for user buttons
-icon_image = Image.open("assets/noun-mic-5589562.png")
+icon_image = Image.open(st.mic_icon_path)
 icon_image = icon_image.resize((32, 32))
 icon_mic = ImageTk.PhotoImage(icon_image)
 
-icon_image = Image.open("assets/noun-play-5587571.png")
+icon_image = Image.open(st.play_icon_path)
 icon_image = icon_image.resize((32, 32))
 icon_play = ImageTk.PhotoImage(icon_image)
 
-icon_image = Image.open("assets/noun-stop-1152678.png")
+icon_image = Image.open(st.stop_icon_path)
 icon_image = icon_image.resize((32, 32))
 icon_stop = ImageTk.PhotoImage(icon_image)
+
+icon_image = Image.open(st.open_icon_path)
+icon_image = icon_image.resize((32, 32))
+icon_open = ImageTk.PhotoImage(icon_image)
 
 # Render buttons with labels
 record_button = ttk.Button(record_frame, image=icon_mic)
 record_button.grid(row=0, column=0, padx=10)
-record_label = ttk.Label(record_frame, text="Record")
+record_label = ttk.Label(record_frame, text=st.record_btn_label)
 record_label.grid(row=1, column=0, padx=10)
 
 play_button = ttk.Button(record_frame, image=icon_play)
 play_button.grid(row=0, column=1, padx=10)
-play_button.config(state="disabled")
-play_label = ttk.Label(record_frame, text="Play")
+play_button.config(state=tk.DISABLED)
+play_label = ttk.Label(record_frame, text=st.play_btn_label)
 play_label.grid(row=1, column=1, padx=10)
 
-# Function definition
+open_button = ttk.Button(record_frame, image=icon_open)
+open_button.grid(row=0, column=2, padx=10)
+open_label = ttk.Label(record_frame, text=st.open_btn_label)
+open_label.grid(row=1, column=2, padx=10)
+
+# Selected file label
+
+file_label = ttk.Label(record_frame, text=st.file_selected_label)
+file_label.grid(row=0, column=3, padx=10)
+
+### Function definition ###
 
 def audio_callback(indata, frames, time, status):
     audio_buffer.extend(indata[:, 0])
@@ -119,18 +141,57 @@ def start_recording():
     if stream.active:
         record_button.configure(image=icon_mic)
         stream.stop()
+        save_atm()
     else:
         record_button.configure(image=icon_stop)
         audio_buffer = []
         stream.start()
 
 def play_audio():
-    # Replays the recorded audio
     sd.play(audio_buffer, sampler)
+
+def save_atm():
+    np.save(out_dir+st.atm_output_file, audio_buffer)
+    os.replace(out_dir+st.atm_output_file+".npy", out_dir+st.atm_output_file)
+
+def load_audio():
+    global audio_buffer
+    
+    audio_data = np.load(out_dir+st.atm_output_file, 'r')
+    write(temp_dir+st.temp_audio_file, sampler, audio_data)
+    sampler, data = read(temp_dir+st.temp_audio_file)
+    audio_buffer = audio_data
+
+    # Plays the audio data using PyAudio
+    p = pyaudio.PyAudio()
+    stream = p.open(format=p.get_format_from_width(data.dtype.itemsize),
+                    channels=len(data.shape),
+                    rate=sampler,
+                    output=True)
+    stream.write(data.tobytes())
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+
+def open_file():
+    filetypes = (
+        ('autrum files', '*.atm'),
+        ('All files', '*.*')
+    )
+    current_dir = os.getcwd()+out_dir
+    file_path = filedialog.askopenfilename(filetypes=filetypes, initialdir=current_dir)
+
+    # Check if a file was selected
+    if file_path:
+        file_label.config(text=st.file_selected_label+file_path)
+    else:
+        file_label.config(text=st.file_not_selected_label)
+
 
 # Set up button callbacks
 record_button.configure(command=start_recording)
 play_button.configure(command=play_audio)
+open_button.configure(command=open_file)
 
-stream = sd.InputStream(callback=audio_callback, channels=1, blocksize=2048, samplerate=sampler)
+stream = sd.InputStream(samplerate=sampler, blocksize=2048, channels=1, callback=audio_callback)
 root.mainloop()
